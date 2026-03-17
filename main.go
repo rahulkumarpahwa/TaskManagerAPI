@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/joho/godotenv"
 )
 
@@ -30,11 +32,13 @@ func main() {
 	}
 	defer db.Close()
 
-	taskRepositary := data.TaskRepositary{DB: db}
+	taskRepositary := &data.TaskRepositary{DB: db}
 
 	taskHandler := handlers.TaskHandlers{Storage: taskRepositary}
+	server.HandleFunc("GET /", taskHandler.Health)
 	server.HandleFunc("GET /task", taskHandler.GetTasks)
 	server.HandleFunc("POST /task", taskHandler.CreateTask)
+	server.HandleFunc("UPDATE /task", taskHandler.UpdateTask)
 
 	http.ListenAndServe(":1999", server)
 }
