@@ -76,3 +76,20 @@ func (tr *TaskRepositary) UpdateTask(id int, title string, description string, s
 		return models.Task{}, nil
 	}
 }
+
+func (tr *TaskRepositary) DeleteTask(id int) (int, error) {
+	query := `DELETE FROM Tasks WHERE id = $1`
+	result, err := tr.DB.Exec(query, id)
+	if err != nil {
+		return 0, fmt.Errorf("could not get delete task: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("could not get any rows affected: %w", err)
+	}
+	if int(rowsAffected) > 0 {
+		return int(rowsAffected), nil
+	} else {
+		return 0, nil
+	}
+}

@@ -77,3 +77,23 @@ func (th *TaskHandlers) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (th *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	idStr := r.URL.Path[len("/task/"):]
+	id_num, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Id can't be found", http.StatusBadRequest)
+	}
+
+	status, err := th.Storage.DeleteTask(id_num)
+	if err != nil {
+		http.Error(w, "Not Able to delete the Task", http.StatusBadRequest)
+	}
+
+	if status > 0 {
+		if err := json.NewEncoder(w).Encode("Task Deleted!"); err != nil {
+			http.Error(w, "Not Able to Decode the Updated Task", http.StatusBadRequest)
+		}
+	}
+}
