@@ -9,7 +9,7 @@ const (
 	Pending      Status = "Pending"
 	UnderProcess Status = "UnderProcess"
 	Skipped      Status = "Skipped"
-	NotDone      Status = "NotDone"
+	UnCompleted      Status = "UnCompleted"
 )
 
 type Task struct {

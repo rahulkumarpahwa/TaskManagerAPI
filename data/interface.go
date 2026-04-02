@@ -11,10 +11,10 @@ type TaskRepositaryModel interface {
 	DeleteTask(id int) (int, error)
 }
 
-type UserRepositaryModel interface{
-	Register(user models.CreateUser) error
+type UserRepositaryModel interface {
+	Register(user models.CreateUser) (bool, error)
 	FindUserById(id int) (models.User, error)
 	FindUserByEmail(email string) (models.User, error)
-	DeleteUser(id int) (error)
+	DeleteUser(id int) error
 	FavoriteTasks(task_id int, user_id int)
 }

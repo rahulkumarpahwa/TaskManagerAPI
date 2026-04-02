@@ -11,23 +11,19 @@ type UserRepositary struct {
 	DB *sql.DB
 }
 
-func (ur *UserRepositary) Register(user models.CreateUser) (int, error) {
+func (ur *UserRepositary) Register(Name string, Email string, Password string) (bool, error) {
 	query := `INSERT INTO USER (username, password, email) VALUES ($1, $2, $3)`
-	result, err := ur.DB.Exec(query, user.Email, user.Password, user.Email)
+	result, err := ur.DB.Exec(query, Name, Email, Password)
 	if err != nil {
 		log.Printf("User can't be inserted : %v", err)
-		return 0, err
+		return false, err
 	}
-	rowsAffected, err := result.RowsAffected()
+	_, err = result.RowsAffected()
 	if err != nil {
 		log.Printf("User Rows can't be inserted : %v", err)
-		return 0, err
+		return false, err
 	}
-	if int(rowsAffected) > 0 {
-		return int(rowsAffected), nil
-	} else {
-		return 0, errors.New("No User Rows affected!")
-	}
+	return true, nil
 }
 
 func (ur *UserRepositary) FindUserById(id int) (user models.User, error error) {
