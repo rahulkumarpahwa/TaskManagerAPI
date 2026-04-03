@@ -5,6 +5,7 @@ import (
 	"TaskManager/models"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 type UserHandlers struct {
@@ -22,13 +23,24 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status, err := h.Storage.Register(reqBody.Name, reqBody.Email, reqBody.Password)
-	if !status || err!= nil{
+	if !status || err != nil {
 		http.Error(w, "Can't Register User", http.StatusBadRequest)
 		return
 	}
 
+
 	
 
 
+	cookie := http.Cookie{
+		Name:     "token",
+		Value:    "",
+		MaxAge:   24 * time.Now().Hour(),
+		HttpOnly: true,
+		Path:     "/",
+		// Secure: true,
+	}
+
+	http.SetCookie(w, &cookie)
 
 }
