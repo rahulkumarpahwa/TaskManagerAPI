@@ -5,33 +5,56 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepositary struct {
 	DB *sql.DB
 }
 
-func (ur *UserRepositary) Register(Name string, Email string, Password string) (bool, error) {
-	query := `INSERT INTO USERS (name, password_hashed, email) VALUES ($1, $2, $3)`
-	result, err := ur.DB.Exec(query, Name, Email, Password)
+func (ur *UserRepositary) Register(Name string, Email string, Password string) (int, bool, error) {
+
+	if Name == "" || Email == "" || Password == "" {
+		log.Print("Invalid resgistration! Requirement Missing!")
+		return -1, false, nil
+	}
+
+	// check if the user exists already
+	var exists bool
+	err := ur.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`, Email).Scan(&exists)
+	if err != nil {
+		log.Printf("Failed to check user : %v", err)
+		return -1, false, err
+	}
+	if exists {
+		log.Printf("User Already Exists with email : %s", Email)
+		return -1, false, errors.New("User Already Exists!")
+	}
+
+	// hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Failed to hash password: %v", err)
+		return -1, false, err
+	}
+
+	var id int
+	query := `INSERT INTO USERS (name, password_hashed, email) VALUES ($1, $2, $3) RETURNING id`
+	err = ur.DB.QueryRow(query, Name, string(hashedPassword), Email).Scan(&id)
 	if err != nil {
 		log.Printf("User can't be inserted : %v", err)
-		return false, err
+		return -1, false, err
 	}
-	_, err = result.RowsAffected()
-	if err != nil {
-		log.Printf("User Rows can't be inserted : %v", err)
-		return false, err
-	}
-	return true, nil
+	return id, true, nil
 }
 
 func (ur *UserRepositary) FindUserById(id int) (user models.User, error error) {
-	query := `SELECT id, username, password, email, created_at FROM USER WHERE id = $1`
+	query := `SELECT id, name, password_hashed, email, time_created FROM users WHERE id = $1`
 	row := ur.DB.QueryRow(query, id)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Email, &u.CreatedAt)
 	if err != nil {
 		log.Printf("User Row can't be Scaned : %v", err)
 		return models.User{}, err
@@ -40,11 +63,11 @@ func (ur *UserRepositary) FindUserById(id int) (user models.User, error error) {
 }
 
 func (ur *UserRepositary) FindUserByEmail(email string) (user models.User, error error) {
-	query := `SELECT id, username, password, email, created_at FROM USER WHERE email = $1`
+	query := `SELECT id, name, password_hashed, email, time_created FROM users WHERE email = $1`
 	row := ur.DB.QueryRow(query, email)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Email, &u.CreatedAt)
 	if err != nil {
 		log.Printf("User Row can't be Scaned : %v", err)
 		return models.User{}, err
@@ -53,7 +76,7 @@ func (ur *UserRepositary) FindUserByEmail(email string) (user models.User, error
 }
 
 func (ur *UserRepositary) DeleteUser(id int) (int, error) {
-	query := `DELETE FROM USER WHERE id = $1`
+	query := `DELETE FROM users WHERE id = $1`
 	result, err := ur.DB.Exec(query, id)
 	if err != nil {
 		log.Printf("User can't be deleted : %v", err)

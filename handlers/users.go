@@ -24,13 +24,13 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, err := h.Storage.Register(reqBody.Name, reqBody.Email, reqBody.Password)
+	id , status, err := h.Storage.Register(reqBody.Name, reqBody.Email, reqBody.Password)
 	if !status || err != nil {
 		http.Error(w, "Can't Register User", http.StatusBadRequest)
 		return
 	}
 
-	token := token.CreateToken(models.User{Username: reqBody.Name, Email: reqBody.Email, Password: reqBody.Password})
+	token := token.CreateToken(models.User{ID : id, Username: reqBody.Name, Email: reqBody.Email, Password: reqBody.Password})
 
 	cookie := http.Cookie{
 		Name:     "token",
@@ -46,9 +46,10 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "User Register Successfully",
 		Data: struct {
+			ID int
 			Email    string
 			Username string
-		}{Email: reqBody.Email, Username: reqBody.Name},
+		}{ID: id, Email: reqBody.Email, Username: reqBody.Name},
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {

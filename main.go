@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
-
+	
 	"github.com/joho/godotenv"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
