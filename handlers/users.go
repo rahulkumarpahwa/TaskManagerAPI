@@ -3,16 +3,18 @@ package handlers
 import (
 	"TaskManager/data"
 	"TaskManager/models"
+	"TaskManager/token"
 	"encoding/json"
 	"net/http"
 	"time"
 )
 
 type UserHandlers struct {
-	Storage data.UserRepositary
+	Storage data.UserRepositaryModel
 }
 
 func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
 	var reqBody models.UserRequest
 
@@ -28,13 +30,11 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	
-
+	token := token.CreateToken(models.User{Username: reqBody.Name, Email: reqBody.Email, Password: reqBody.Password})
 
 	cookie := http.Cookie{
 		Name:     "token",
-		Value:    "",
+		Value:    token,
 		MaxAge:   24 * time.Now().Hour(),
 		HttpOnly: true,
 		Path:     "/",
@@ -42,5 +42,17 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &cookie)
-
+	response := models.UserResponse{
+		Success: true,
+		Message: "User Register Successfully",
+		Data: struct {
+			Email    string
+			Username string
+		}{Email: reqBody.Email, Username: reqBody.Name},
+	}
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Can't Register User Response", http.StatusBadRequest)
+		return
+	}
 }

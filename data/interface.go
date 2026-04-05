@@ -12,9 +12,9 @@ type TaskRepositaryModel interface {
 }
 
 type UserRepositaryModel interface {
-	Register(user models.CreateUser) (bool, error)
-	FindUserById(id int) (models.User, error)
-	FindUserByEmail(email string) (models.User, error)
-	DeleteUser(id int) error
-	FavoriteTasks(task_id int, user_id int)
+	Register(string, string, string) (bool, error)
+	// FindUserById(int) (models.User, error)
+	// FindUserByEmail(string) (models.User, error)
+	// DeleteUser(int) error
+	// FavoriteTasks(int, int)
 }

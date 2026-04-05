@@ -12,7 +12,7 @@ type UserRepositary struct {
 }
 
 func (ur *UserRepositary) Register(Name string, Email string, Password string) (bool, error) {
-	query := `INSERT INTO USER (username, password, email) VALUES ($1, $2, $3)`
+	query := `INSERT INTO USERS (name, password_hashed, email) VALUES ($1, $2, $3)`
 	result, err := ur.DB.Exec(query, Name, Email, Password)
 	if err != nil {
 		log.Printf("User can't be inserted : %v", err)

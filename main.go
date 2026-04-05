@@ -41,5 +41,11 @@ func main() {
 	server.HandleFunc("PATCH /task/", taskHandler.UpdateTask)
 	server.HandleFunc("DELETE /task/", taskHandler.DeleteTask)
 
+	userRespositary := &data.UserRepositary{DB: db}
+
+	userHandler := handlers.UserHandlers{Storage: userRespositary}
+
+	server.HandleFunc("POST /user", userHandler.Register)
+
 	http.ListenAndServe(":1999", server)
 }

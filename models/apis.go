@@ -9,5 +9,5 @@ type UserRequest struct {
 type UserResponse struct{
 	Success bool
 	Message string
-	
+	Data any
 }
