@@ -30,7 +30,7 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := token.CreateToken(models.User{ID : id, Username: reqBody.Name, Email: reqBody.Email, Password: reqBody.Password})
+	token := token.CreateToken(models.User{ID : id, Name: reqBody.Name, Email: reqBody.Email, Password: reqBody.Password})
 
 	cookie := http.Cookie{
 		Name:     "token",
@@ -56,4 +56,8 @@ func (h *UserHandlers) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can't Register User Response", http.StatusBadRequest)
 		return
 	}
+}
+
+func (h *UserHandlers) Authenticate(w http.ResponseWriter, r *http.Request) {
+	
 }

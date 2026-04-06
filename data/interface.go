@@ -12,7 +12,8 @@ type TaskRepositaryModel interface {
 }
 
 type UserRepositaryModel interface {
-	Register(string, string, string) (int , bool, error)
+	Register(string, string, string) (int, bool, error)
+	Authenticate(string, string) (int, bool, error)
 	// FindUserById(int) (models.User, error)
 	// FindUserByEmail(string) (models.User, error)
 	// DeleteUser(int) error

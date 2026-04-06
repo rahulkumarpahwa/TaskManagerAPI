@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -49,12 +50,52 @@ func (ur *UserRepositary) Register(Name string, Email string, Password string) (
 	return id, true, nil
 }
 
+func (ur *UserRepositary) Authenticate(email string, password string) (int, bool, error) {
+
+	if email == "" || password == "" {
+		log.Print("Authentication validation failed: missing credentials")
+		return -1, false, nil
+	}
+
+	query := `SELECT id, name, email, hashed_password FROM users WHERE email = $1 AND time_deleted IS NULL`
+
+	var user models.User
+	err := ur.DB.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password)
+	if err == sql.ErrNoRows {
+		log.Printf("User not found for email : %v", err)
+		return -1, false, err
+	}
+
+	if err != nil {
+		log.Printf("Failed to get user from email for authentication : %v", err)
+		return -1, false, err
+	}
+
+	//verify password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		log.Printf("Password mismatch for email : %v", err)
+		return -1, false, err
+	}
+
+	// update last login:
+	updateQuery := `UPDATE users SET last_login =$1 WHERE id = $2`
+
+	_, err = ur.DB.Exec(updateQuery, time.Now(), user.ID)
+	if err != nil {
+		log.Printf("Failed to update last login! %v", err)
+		return -1, false, err
+	}
+
+	return user.ID, true, nil
+}
+
 func (ur *UserRepositary) FindUserById(id int) (user models.User, error error) {
 	query := `SELECT id, name, password_hashed, email, time_created FROM users WHERE id = $1`
 	row := ur.DB.QueryRow(query, id)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Email, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Name, &u.Password, &u.Email, &u.CreatedAt)
 	if err != nil {
 		log.Printf("User Row can't be Scaned : %v", err)
 		return models.User{}, err
@@ -67,7 +108,7 @@ func (ur *UserRepositary) FindUserByEmail(email string) (user models.User, error
 	row := ur.DB.QueryRow(query, email)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Username, &u.Password, &u.Email, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Name, &u.Password, &u.Email, &u.CreatedAt)
 	if err != nil {
 		log.Printf("User Row can't be Scaned : %v", err)
 		return models.User{}, err
