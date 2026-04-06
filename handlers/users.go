@@ -4,9 +4,13 @@ import (
 	"TaskManager/data"
 	"TaskManager/models"
 	"TaskManager/token"
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserHandlers struct {
@@ -73,15 +77,61 @@ func (h *UserHandlers) Authenticate(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "User Auth Successfully",
 		Data: struct {
-			ID       int
-			Email    string
-			Name string
-		}{ID: user.ID, Email: reqBody.Email, Name : user.Name},
+			ID    int
+			Email string
+			Name  string
+		}{ID: user.ID, Email: reqBody.Email, Name: user.Name},
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Can't Auth User Response", http.StatusBadRequest)
 		return
 	}
+
+}
+
+func (h *UserHandlers) AuthMiddleware(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("token")
+		if cookie.Name != "token" || cookie.Value == "" || err != nil {
+			log.Println("Cookie not found:", err)
+			http.Error(w, "Missing authorization token", http.StatusUnauthorized)
+			return
+		}
+
+		// Parse and validate the token
+		token, err := jwt.Parse(cookie.Value,
+			func(t *jwt.Token) (interface{}, error) {
+				// Ensure the signing method is HMAC
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, jwt.ErrSignatureInvalid
+				}
+				return []byte(token.GetJWTSecret()), nil
+			},
+		)
+		if err != nil || !token.Valid {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// Extract claims from the token
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			return
+		}
+
+		// Get the email from claims
+		email, ok := claims["email"].(string)
+		if !ok {
+			http.Error(w, "Email not found in token", http.StatusUnauthorized)
+			return
+		}
+
+		// Inject email into the request context
+		ctx := context.WithValue(r.Context(), "email", email)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 
 }
