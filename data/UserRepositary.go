@@ -50,32 +50,32 @@ func (ur *UserRepositary) Register(Name string, Email string, Password string) (
 	return id, true, nil
 }
 
-func (ur *UserRepositary) Authenticate(email string, password string) (int, bool, error) {
+func (ur *UserRepositary) Authenticate(email string, password string) (models.User, bool, error) {
 
 	if email == "" || password == "" {
 		log.Print("Authentication validation failed: missing credentials")
-		return -1, false, nil
+		return models.User{}, false, nil
 	}
 
-	query := `SELECT id, name, email, hashed_password FROM users WHERE email = $1 AND time_deleted IS NULL`
+	query := `SELECT id, name, password_hashed, email FROM users WHERE email = $1 AND time_deleted IS NULL`
 
 	var user models.User
-	err := ur.DB.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password)
+	err := ur.DB.QueryRow(query, email).Scan(&user.ID, &user.Name, &user.Password, &user.Email)
 	if err == sql.ErrNoRows {
 		log.Printf("User not found for email : %v", err)
-		return -1, false, err
+		return models.User{}, false, err
 	}
 
 	if err != nil {
 		log.Printf("Failed to get user from email for authentication : %v", err)
-		return -1, false, err
+		return models.User{}, false, err
 	}
 
 	//verify password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		log.Printf("Password mismatch for email : %v", err)
-		return -1, false, err
+		return models.User{}, false, err
 	}
 
 	// update last login:
@@ -84,10 +84,10 @@ func (ur *UserRepositary) Authenticate(email string, password string) (int, bool
 	_, err = ur.DB.Exec(updateQuery, time.Now(), user.ID)
 	if err != nil {
 		log.Printf("Failed to update last login! %v", err)
-		return -1, false, err
+		return models.User{}, false, err
 	}
 
-	return user.ID, true, nil
+	return user, true, nil
 }
 
 func (ur *UserRepositary) FindUserById(id int) (user models.User, error error) {

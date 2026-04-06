@@ -11,3 +11,8 @@ type UserResponse struct{
 	Message string
 	Data any
 }
+
+type AuthUserRequest struct {
+	Email string
+	Password string
+}

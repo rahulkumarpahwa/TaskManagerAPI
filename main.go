@@ -8,9 +8,8 @@ import (
 	"net/http"
 	"os"
 
-	
-	"github.com/joho/godotenv"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -45,7 +44,8 @@ func main() {
 
 	userHandler := handlers.UserHandlers{Storage: userRespositary}
 
-	server.HandleFunc("POST /user", userHandler.Register)
+	server.HandleFunc("POST /user/auth/", userHandler.Authenticate)
+	server.HandleFunc("POST /user/register/", userHandler.Register)
 
 	http.ListenAndServe(":1999", server)
 }
