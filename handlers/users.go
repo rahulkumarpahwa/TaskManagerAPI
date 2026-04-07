@@ -123,14 +123,14 @@ func (h *UserHandlers) AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Get the id from claims
-		id, ok := claims["id"].(int)
+		id, ok := claims["id"].(float64)
 		if !ok {
 			http.Error(w, "ID not found in token", http.StatusUnauthorized)
 			return
 		}
 
-		// Inject email into the request context
-		ctx := context.WithValue(r.Context(), "id", id)
+		// Inject id into the request context
+		ctx := context.WithValue(r.Context(), "id", int(id))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 
