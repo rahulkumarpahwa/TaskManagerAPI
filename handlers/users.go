@@ -94,7 +94,7 @@ func (h *UserHandlers) AuthMiddleware(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("token")
-		if cookie.Name != "token" || cookie.Value == "" || err != nil {
+		if  cookie.Value == "" || err != nil {
 			log.Println("Cookie not found:", err)
 			http.Error(w, "Missing authorization token", http.StatusUnauthorized)
 			return
