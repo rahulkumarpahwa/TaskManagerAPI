@@ -31,21 +31,22 @@ func main() {
 	}
 	defer db.Close()
 
+	taskRepositary := &data.TaskRepositary{DB: db}
+
+	taskHandler := handlers.TaskHandlers{Storage: taskRepositary}
+
 	userRespositary := &data.UserRepositary{DB: db}
 
 	userHandler := handlers.UserHandlers{Storage: userRespositary}
 
-	server.HandleFunc("POST /user/auth/", userHandler.Authenticate)
-	server.HandleFunc("POST /user/register/", userHandler.Register)
-
-	taskRepositary := &data.TaskRepositary{DB: db}
-
-	taskHandler := handlers.TaskHandlers{Storage: taskRepositary}
 	server.HandleFunc("GET /", taskHandler.Health)
 	server.HandleFunc("GET /task", taskHandler.GetTasks)
 	server.Handle("POST /task", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.CreateTask)))
 	server.Handle("PATCH /task/", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.UpdateTask)))
 	server.Handle("DELETE /task/", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.DeleteTask)))
+
+	server.HandleFunc("POST /user/auth/", userHandler.Authenticate)
+	server.HandleFunc("POST /user/register/", userHandler.Register)
 
 	http.ListenAndServe(":1999", server)
 }

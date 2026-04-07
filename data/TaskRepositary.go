@@ -16,22 +16,22 @@ type TaskRepositary struct {
 const defaultLimit = 20
 
 func (tr *TaskRepositary) CreateTask(task models.CreateTask) int {
-	query := `INSERT INTO TASKS (title, description, status) VALUES ($1, $2, $3)`
+	query := `INSERT INTO TASKS (title, description, status, user_id, is_favorite) VALUES ($1, $2, $3, $4, $5)`
 
-	result, err := tr.DB.Exec(query, task.Title, task.Description, task.Status)
+	result, err := tr.DB.Exec(query, task.Title, task.Description, task.Status, task.UserId, task.IsFavorite)
 
 	if err != nil {
-		log.Fatalf("Task can't be created : %v", err)
+		log.Printf("Task can't be created : %v", err)
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Fatalf("could not get affected rows: %v", err)
+		log.Printf("could not get affected rows: %v", err)
 	}
 	return int(rowsAffected)
 }
 
 func (tr *TaskRepositary) GetTasks() ([]models.Task, error) {
-	query := `SELECT id, title, description, status, created_at FROM tasks ORDER BY id LIMIT $1`
+	query := `SELECT id, title, description, status, created_at, modified_at, user_id, is_favorite FROM tasks ORDER BY id LIMIT $1`
 	rows, err := tr.DB.Query(query, defaultLimit)
 	if err != nil {
 		return nil, fmt.Errorf("could not get tasks: %w", err)
@@ -41,7 +41,7 @@ func (tr *TaskRepositary) GetTasks() ([]models.Task, error) {
 
 	for rows.Next() {
 		var task models.Task
-		if err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status, &task.CreatedAt); err != nil {
+		if err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status, &task.CreatedAt, &task.ModifiedAt, &task.UserId, &task.IsFavorite); err != nil {
 			return nil, fmt.Errorf("can't retrieve task row: %w", err)
 		}
 		tasks = append(tasks, task)
