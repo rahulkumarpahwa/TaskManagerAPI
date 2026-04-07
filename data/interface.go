@@ -5,10 +5,10 @@ import (
 )
 
 type TaskRepositaryModel interface {
-	CreateTask(task models.CreateTask) int
+	CreateTask(models.CreateTask) int
 	GetTasks() ([]models.Task, error)
-	UpdateTask(id int, title string, description string, status models.Status, userId int, isFavorite bool) (models.Task, bool, error)
-	DeleteTask(id int) (int, error)
+	UpdateTask(int, string, string, models.Status, int, bool) (models.Task, bool, error)
+	DeleteTask(int, int) (models.Task, bool, error)
 }
 
 type UserRepositaryModel interface {

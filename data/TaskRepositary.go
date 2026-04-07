@@ -78,19 +78,15 @@ func (tr *TaskRepositary) UpdateTask(id int, title string, description string, s
 	return updatedTask, true, nil
 }
 
-func (tr *TaskRepositary) DeleteTask(id int) (int, error) {
-	query := `DELETE FROM Tasks WHERE id = $1`
-	result, err := tr.DB.Exec(query, id)
+func (tr *TaskRepositary) DeleteTask(id int, userId int) (models.Task, bool, error) {
+	query := `DELETE FROM Tasks WHERE id = $1 AND user_id = $2 RETURNING id, title, description, status, created_at, modified_at, user_id, is_favorite`
+	var deletedTask models.Task
+	err := tr.DB.QueryRow(query, id, userId).Scan(&deletedTask.ID, &deletedTask.Title, &deletedTask.Description, &deletedTask.Status, &deletedTask.CreatedAt, &deletedTask.ModifiedAt, &deletedTask.UserId, &deletedTask.IsFavorite)
+	if err == sql.ErrNoRows {
+		return models.Task{}, false, fmt.Errorf("Not able to return the deleted task : %v", err)
+	}
 	if err != nil {
-		return 0, fmt.Errorf("could not get delete task: %w", err)
+		return models.Task{}, false, fmt.Errorf("could not get delete task: %w", err)
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf("could not get any rows affected: %w", err)
-	}
-	if int(rowsAffected) > 0 {
-		return int(rowsAffected), nil
-	} else {
-		return 0, nil
-	}
+	return deletedTask, true, nil
 }

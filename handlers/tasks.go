@@ -95,14 +95,35 @@ func (th *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Id can't be found", http.StatusBadRequest)
 	}
 
-	status, err := th.Storage.DeleteTask(id_num)
-	if err != nil {
-		http.Error(w, "Not Able to delete the Task", http.StatusBadRequest)
+	val := r.Context().Value("id")
+
+	user_id, ok := val.(int)
+	if !ok {
+		http.Error(w, "Invalid or missing user ID", http.StatusUnauthorized)
+		return
 	}
 
-	if status > 0 {
-		if err := json.NewEncoder(w).Encode("Task Deleted!"); err != nil {
-			http.Error(w, "Not Able to Decode the Updated Task", http.StatusBadRequest)
+	deleted_task, status, err := th.Storage.DeleteTask(id_num, user_id)
+	if err != nil || !status {
+		http.Error(w, "Not Able to delete the Task : "+err.Error(), http.StatusBadRequest)
+	}
+
+	if status {
+		response := models.UserResponse{
+			Success: true,
+			Message: "Task has been Deleted!",
+			Data: struct {
+				Message string
+				Task    models.Task
+			}{
+				Message: "Deleted Task",
+				Task:    deleted_task,
+			},
+		}
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Not Able to Decode the Deleted Task", http.StatusBadRequest)
+			return
 		}
 	}
 }
