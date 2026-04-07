@@ -7,7 +7,7 @@ import (
 type TaskRepositaryModel interface {
 	CreateTask(task models.CreateTask) int
 	GetTasks() ([]models.Task, error)
-	UpdateTask(id int, title string, description string, status models.Status) (models.Task, error)
+	UpdateTask(id int, title string, description string, status models.Status, userId int, isFavorite bool) (models.Task, bool, error)
 	DeleteTask(id int) (int, error)
 }
 

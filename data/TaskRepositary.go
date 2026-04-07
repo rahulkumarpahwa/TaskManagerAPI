@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -54,27 +55,27 @@ func (tr *TaskRepositary) GetTasks() ([]models.Task, error) {
 	return tasks, nil
 }
 
-func (tr *TaskRepositary) UpdateTask(id int, title string, description string, status models.Status) (models.Task, error) {
-	query := `UPDATE Tasks SET title = $1, description = $2, status = $3 WHERE id = $4`
-	result, err := tr.DB.Exec(query, title, description, status, id)
+func (tr *TaskRepositary) UpdateTask(id int, title string, description string, status models.Status, userId int, isFavorite bool) (models.Task, bool, error) {
+	query := `UPDATE Tasks SET title = $1, description = $2, status = $3, is_favorite = $4 WHERE id = $5 AND user_id = $6`
+	_, err := tr.DB.Exec(query, title, description, status, isFavorite, id, userId)
 	if err != nil {
-		return models.Task{}, fmt.Errorf("could not get updated task: %w", err)
+		return models.Task{}, false, fmt.Errorf("could not get updated task: %w", err)
 	}
-	rowsAffected, err := result.RowsAffected()
+
+	// updating the modified_at:
+	updateQuery := `UPDATE Tasks SET modified_at = $1 WHERE id = $2 RETURNING id, title, description, created_at, modified_at, user_id, is_favorite`
+
+	var updatedTask models.Task
+	err = tr.DB.QueryRow(updateQuery, time.Now(), id).Scan(&updatedTask.ID, &updatedTask.Title, &updatedTask.Description, &updatedTask.CreatedAt, &updatedTask.ModifiedAt, &updatedTask.UserId, &updatedTask.IsFavorite)
+
+	if err == sql.ErrNoRows {
+		return models.Task{}, false, fmt.Errorf("Not able to update the modified time : %v", err)
+	}
 	if err != nil {
-		return models.Task{}, fmt.Errorf("could not get any rows affected: %w", err)
+		return models.Task{}, false, fmt.Errorf("Error while updating the modified time : %v", err)
 	}
-	if int(rowsAffected) > 0 {
-		query := `SELECT id, title, description, status, created_at FROM Tasks WHERE id = $1`
-		row := tr.DB.QueryRow(query, id)
-		var task models.Task
-		if err := row.Scan(&task.ID, &task.Title, &task.Description, &task.Status, &task.CreatedAt); err != nil {
-			return models.Task{}, fmt.Errorf("could not updated task: %w", err)
-		}
-		return task, nil
-	} else {
-		return models.Task{}, nil
-	}
+
+	return updatedTask, true, nil
 }
 
 func (tr *TaskRepositary) DeleteTask(id int) (int, error) {

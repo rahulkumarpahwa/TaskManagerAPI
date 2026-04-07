@@ -58,6 +58,15 @@ func (th *TaskHandlers) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Id can't be found", http.StatusBadRequest)
 		return
 	}
+
+	val := r.Context().Value("id")
+
+	user_id, ok := val.(int)
+	if !ok {
+		http.Error(w, "Invalid or missing user ID", http.StatusUnauthorized)
+		return
+	}
+
 	var task models.CreateTask
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewDecoder(r.Body).Decode(&task)
@@ -66,8 +75,8 @@ func (th *TaskHandlers) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated_task, err := th.Storage.UpdateTask(id_num, task.Title, task.Description, task.Status)
-	if err != nil {
+	updated_task, status, err := th.Storage.UpdateTask(id_num, task.Title, task.Description, task.Status, user_id, task.IsFavorite)
+	if err != nil || !status {
 		http.Error(w, "Not Able to Update the Task", http.StatusBadRequest)
 		return
 	}
