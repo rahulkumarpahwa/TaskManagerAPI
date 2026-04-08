@@ -90,3 +90,34 @@ func (tr *TaskRepositary) DeleteTask(id int, userId int) (models.Task, bool, err
 	}
 	return deletedTask, true, nil
 }
+
+func (tr *TaskRepositary) SetFavoriteTask(task_id int, user_id int) (bool, error) {
+
+	query := `UPDATE tasks SET is_favorite = true WHERE id = $1 AND user_id = $2`
+	_, err := tr.DB.Exec(query, task_id, user_id)
+	if err != nil {
+		log.Printf("Task can't be set favorite : %v", err)
+		return false, err
+	}
+	return true, nil
+}
+
+func (tr *TaskRepositary) GetFavoriteTasks(task_id int, user_id int) ([]models.Task, error) {
+
+	query := `SELECT id, title, description, status, created_at, modified_at, user_id, is_favorite FROM tasks WHERE is_favorite = true LIMIT $1`
+
+	rows, err := tr.DB.Query(query, defaultLimit)
+	if err != nil {
+		log.Printf("Can't get favorite tasks: %v", err)
+		return []models.Task{}, err
+	}
+
+	var favorite_tasks []models.Task
+	for rows.Next() {
+		var fav_task models.Task
+		rows.Scan(&fav_task.ID, &fav_task.Title, &fav_task.Description, &fav_task.Status, &fav_task.CreatedAt, &fav_task.ModifiedAt, &fav_task.UserId, &fav_task.IsFavorite)
+
+		favorite_tasks = append(favorite_tasks, fav_task)
+	}
+	return favorite_tasks, nil
+}

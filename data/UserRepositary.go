@@ -134,20 +134,3 @@ func (ur *UserRepositary) DeleteUser(id int) (int, error) {
 		return 0, errors.New("No User Rows deletion affected!")
 	}
 }
-
-func (ur *UserRepositary) FavoriteTasks(task_id int, user_id int) (int, error) {
-	query := `INSERT INTO task_user (task_id, user_id) VALUES ($1, $2)`
-
-	result, err := ur.DB.Exec(query, task_id, user_id)
-	if err != nil {
-		log.Printf("favorite task can't be inserted : %v", err)
-		return 0, err
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Printf("favorite task rows can't be affected : %v", err)
-		return 0, err
-
-	}
-	return int(rowsAffected), nil
-}
