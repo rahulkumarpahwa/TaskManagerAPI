@@ -44,6 +44,8 @@ func main() {
 	server.Handle("POST /task", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.CreateTask)))
 	server.Handle("PATCH /task/", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.UpdateTask)))
 	server.Handle("DELETE /task/", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.DeleteTask)))
+	server.Handle("GET /task/favorites", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.GetFavoriteTasks)))
+	server.Handle("PATCH /task/set-favorite/", userHandler.AuthMiddleware(http.HandlerFunc(taskHandler.SetFavoriteTask)))
 
 	server.HandleFunc("POST /user/auth/", userHandler.Authenticate)
 	server.HandleFunc("POST /user/register/", userHandler.Register)

@@ -4,6 +4,7 @@ import (
 	"TaskManager/data"
 	"TaskManager/models"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -128,12 +129,14 @@ func (th *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *TaskHandlers) SetFavoriteTask(w http.ResponseWriter, r http.Request) {
+func (h *TaskHandlers) SetFavoriteTask(w http.ResponseWriter, r *http.Request) {
 
-	var taskId int
-	err := json.NewDecoder(r.Body).Decode(&taskId)
+	idStr := r.URL.Path[len("/task/set-favorite/"):]
+	taskIdNum, err := strconv.Atoi(idStr)
+	fmt.Print(taskIdNum)
+	
 	if err != nil {
-		http.Error(w, "Can't get the task id to Set", http.StatusBadRequest)
+		http.Error(w, "Task Id can't be found", http.StatusBadRequest)
 		return
 	}
 
@@ -145,7 +148,7 @@ func (h *TaskHandlers) SetFavoriteTask(w http.ResponseWriter, r http.Request) {
 		return
 	}
 
-	status, err := h.Storage.SetFavoriteTask(taskId, user_id)
+	status, err := h.Storage.SetFavoriteTask(taskIdNum, user_id)
 
 	response := models.UserResponse{
 		Success: true,
@@ -159,7 +162,7 @@ func (h *TaskHandlers) SetFavoriteTask(w http.ResponseWriter, r http.Request) {
 	}
 }
 
-func (h *TaskHandlers) GetFavoriteTasks(w http.ResponseWriter, r http.Request) {
+func (h *TaskHandlers) GetFavoriteTasks(w http.ResponseWriter, r *http.Request) {
 
 	val := r.Context().Value("id")
 
