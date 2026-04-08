@@ -127,3 +127,68 @@ func (th *TaskHandlers) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func (h *TaskHandlers) SetFavoriteTask(w http.ResponseWriter, r http.Request) {
+
+	var taskId int
+	err := json.NewDecoder(r.Body).Decode(&taskId)
+	if err != nil {
+		http.Error(w, "Can't get the task id to Set", http.StatusBadRequest)
+		return
+	}
+
+	val := r.Context().Value("id")
+
+	user_id, ok := val.(int)
+	if !ok {
+		http.Error(w, "Invalid or missing user ID", http.StatusUnauthorized)
+		return
+	}
+
+	status, err := h.Storage.SetFavoriteTask(taskId, user_id)
+
+	response := models.UserResponse{
+		Success: true,
+		Message: "Task has been Favorited!",
+		Data:    status,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Not Able to Encode the Favorite Task", http.StatusBadRequest)
+		return
+	}
+}
+
+func (h *TaskHandlers) GetFavoriteTasks(w http.ResponseWriter, r http.Request) {
+
+	val := r.Context().Value("id")
+
+	user_id, ok := val.(int)
+	if !ok {
+		http.Error(w, "Invalid or missing user ID", http.StatusUnauthorized)
+		return
+	}
+
+	fav_tasks, err := h.Storage.GetFavoriteTasks(user_id)
+	if err != nil {
+		http.Error(w, "Not Able to get the favorite tasks", http.StatusBadRequest)
+		return
+	}
+
+	response := models.UserResponse{
+		Success: true,
+		Message: "Task has been Favorited!",
+		Data: struct {
+			Message string
+			Tasks   []models.Task
+		}{
+			Message: "Favorites",
+			Tasks:   fav_tasks,
+		},
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Not Able to Encode the Favorite Task", http.StatusBadRequest)
+		return
+	}
+}

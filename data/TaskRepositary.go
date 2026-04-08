@@ -102,11 +102,11 @@ func (tr *TaskRepositary) SetFavoriteTask(task_id int, user_id int) (bool, error
 	return true, nil
 }
 
-func (tr *TaskRepositary) GetFavoriteTasks(task_id int, user_id int) ([]models.Task, error) {
+func (tr *TaskRepositary) GetFavoriteTasks(user_id int) ([]models.Task, error) {
 
-	query := `SELECT id, title, description, status, created_at, modified_at, user_id, is_favorite FROM tasks WHERE is_favorite = true LIMIT $1`
+	query := `SELECT id, title, description, status, created_at, modified_at, user_id, is_favorite FROM tasks WHERE is_favorite = true AND user_id = $1 LIMIT $2`
 
-	rows, err := tr.DB.Query(query, defaultLimit)
+	rows, err := tr.DB.Query(query, user_id, defaultLimit)
 	if err != nil {
 		log.Printf("Can't get favorite tasks: %v", err)
 		return []models.Task{}, err

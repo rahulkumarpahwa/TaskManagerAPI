@@ -10,7 +10,7 @@ type TaskRepositaryModel interface {
 	UpdateTask(int, string, string, models.Status, int, bool) (models.Task, bool, error)
 	DeleteTask(int, int) (models.Task, bool, error)
 	SetFavoriteTask(int, int) (bool, error)
-	GetFavoriteTasks(int, int)  ([]models.Task, error)
+	GetFavoriteTasks(int)  ([]models.Task, error)
 }
 
 type UserRepositaryModel interface {
