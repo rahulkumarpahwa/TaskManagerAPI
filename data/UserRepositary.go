@@ -91,11 +91,11 @@ func (ur *UserRepositary) Authenticate(email string, password string) (models.Us
 }
 
 func (ur *UserRepositary) FindUserById(id int) (user models.User, error error) {
-	query := `SELECT id, name, password_hashed, email, time_created FROM users WHERE id = $1`
+	query := `SELECT id, name, email, last_login, time_created FROM users WHERE id = $1`
 	row := ur.DB.QueryRow(query, id)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Name, &u.Password, &u.Email, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.LastLogin, &u.TimeCreated)
 	if err != nil {
 		log.Printf("User Row can't be Scaned : %v", err)
 		return models.User{}, err
@@ -108,7 +108,7 @@ func (ur *UserRepositary) FindUserByEmail(email string) (user models.User, error
 	row := ur.DB.QueryRow(query, email)
 
 	var u models.User
-	err := row.Scan(&u.ID, &u.Name, &u.Password, &u.Email, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Name, &u.Password, &u.Email, &u.TimeCreated)
 	if err != nil {
 		log.Printf("User Row can't be Scaned : %v", err)
 		return models.User{}, err

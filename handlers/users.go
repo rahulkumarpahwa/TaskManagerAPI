@@ -135,3 +135,30 @@ func (h *UserHandlers) AuthMiddleware(next http.Handler) http.Handler {
 	})
 
 }
+
+func (h *UserHandlers) GetUserDetails(w http.ResponseWriter, r *http.Request) {
+	val := r.Context().Value("id")
+
+	id, ok := val.(int)
+	if !ok {
+		log.Print("Not able to get the user id")
+		return
+	}
+
+	user, err := h.Storage.FindUserById(id)
+	if err != nil {
+		http.Error(w, "Can't Find the User Details", http.StatusBadRequest)
+		return
+	}
+
+	response := models.UserResponse{
+		Success: true,
+		Message: "User Details",
+		Data:    user,
+	}
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Can't Get User Details", http.StatusBadRequest)
+		return
+	}
+}

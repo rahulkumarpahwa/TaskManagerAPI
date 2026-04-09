@@ -7,7 +7,10 @@ type User struct {
 	Name  string    `json:"name"`
 	Password  string    `json:"password_hashed"`
 	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+	LastLogin time.Time `json:"last_login"`
+	TimeCreated time.Time `json:"time_created"`
+	TimeConfirmed time.Time `json:"time_confirmed"`
+	TimeDeleted time.Time `json:"time_deleted"`
 }
 
 type CreateUser struct {

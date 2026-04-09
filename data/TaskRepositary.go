@@ -63,10 +63,10 @@ func (tr *TaskRepositary) UpdateTask(id int, title string, description string, s
 	}
 
 	// updating the modified_at:
-	updateQuery := `UPDATE Tasks SET modified_at = $1 WHERE id = $2 RETURNING id, title, description, status, created_at, modified_at, user_id, is_favorite`
+	updateQuery := `UPDATE Tasks SET modified_at = $1 WHERE id = $2 AND user_id = $3 RETURNING id, title, description, status, created_at, modified_at, user_id, is_favorite`
 
 	var updatedTask models.Task
-	err = tr.DB.QueryRow(updateQuery, time.Now(), id).Scan(&updatedTask.ID, &updatedTask.Title, &updatedTask.Description, &updatedTask.Status, &updatedTask.CreatedAt, &updatedTask.ModifiedAt, &updatedTask.UserId, &updatedTask.IsFavorite)
+	err = tr.DB.QueryRow(updateQuery, time.Now(), id, userId).Scan(&updatedTask.ID, &updatedTask.Title, &updatedTask.Description, &updatedTask.Status, &updatedTask.CreatedAt, &updatedTask.ModifiedAt, &updatedTask.UserId, &updatedTask.IsFavorite)
 
 	if err == sql.ErrNoRows {
 		return models.Task{}, false, fmt.Errorf("Not able to update the modified time : %v", err)
