@@ -134,3 +134,21 @@ func (ur *UserRepositary) DeleteUser(id int) (int, error) {
 		return 0, errors.New("No User Rows deletion affected!")
 	}
 }
+
+func (ur *UserRepositary) UpdateUser(id int, newName string) error {
+	tx, err := ur.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	query := `UPDATE users SET name = $1 WHERE id = $2`
+	_, err = tx.Exec(query, newName, id)
+	if err != nil {
+		log.Printf("Failed to update user name: %v", err)
+		return err
+	}
+
+	return tx.Commit()
+}
